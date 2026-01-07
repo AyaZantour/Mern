@@ -23,7 +23,8 @@ function App() {
             <Route path="/candidate-portal" element={<CandidatePortal />} />
             <Route path="/test/:uniqueLink" element={<CandidateTest />} />
             <Route path="/test-evaluation/:testId" element={<TestEvaluation />} />
-            <Route path="/test-results" element={<TestResults />} />
+            <Route path="/test-results/:testId" element={<TestResults />} />
+
             {/* Add more routes as needed */}
           </Routes>
         </main>

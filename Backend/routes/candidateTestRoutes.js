@@ -5,12 +5,20 @@ const {
   getCandidateTestByLink,
   submitCandidateTest,
   getCandidateTests,
-  evaluateCandidateTest
+  evaluateCandidateTest,
+  sendResultsEmailToCandidate
 } = require('../controllers/candidateTestController');
 // i have to wait to build tests to be able to use these
 router.route('/')
   .post(createCandidateTest)
   .get(getCandidateTests);
+
+router.route('/link/:uniqueLink')
+  .get(getCandidateTestByLink);
+
+
+router.route('/:id/send-results')
+  .post(sendResultsEmailToCandidate);  
 
 router.route('/link/:uniqueLink')
   .get(getCandidateTestByLink);

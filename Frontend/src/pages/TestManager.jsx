@@ -20,18 +20,22 @@ const TestManager = () => {
   }, []);
 
   const fetchTests = async () => {
-    setLoading(true);
-    try {
-      const response = await testAPI.getAll();
-      if (response.data.success) {
-        setTests(response.data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching tests:', error);
-    } finally {
-      setLoading(false);
+  setLoading(true);
+  try {
+    const response = await testAPI.getAll();
+    if (response.data.success) {
+      // ✅ Sort by createdAt, newest first
+      const sortedTests = response.data.data.sort((a, b) => 
+        new Date(b.createdAt) - new Date(a.createdAt)
+      );
+      setTests(sortedTests);
     }
-  };
+  } catch (error) {
+    console.error('Error fetching tests:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleCreateTest = async (e) => {
     e.preventDefault();

@@ -162,6 +162,10 @@
 // };
 
 
+
+const { sendResultsEmail } = require('../utils/emailUtils');
+
+
 const CandidateTest = require('../models/CandidateTest');
 const Test = require('../models/Test');
 
@@ -207,6 +211,8 @@ const createCandidateTest = async (req, res) => {
     });
   }
 };
+
+
 
 
 
@@ -587,12 +593,76 @@ const evaluateCandidateTest = async (req, res) => {
     });
   }
 };
+// ✅ NEW: Send results email to candidate
+const sendResultsEmailToCandidate = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    console.log('📧 Sending results email for test:', id);
+    
+    const candidateTest = await CandidateTest.findById(id)
+      .populate('test')
+      .populate({
+        path: 'questions.question',
+        model: 'Question'
+      });
+    
+    if (!candidateTest) {
+      return res.status(404).json({
+        success: false,
+        error: 'Test non trouvé'
+      });
+    }
 
+    if (candidateTest.status !== 'completed' && candidateTest.status !== 'evaluated') {
+      return res.status(400).json({
+        success: false,
+        error: 'Le test n\'est pas encore complété'
+      });
+    }
+
+    const percentage = candidateTest.totalQuestions > 0 
+      ? Math.round((candidateTest.score / candidateTest.totalQuestions) * 100)
+      : 0;
+
+    const emailSent = await sendResultsEmail(
+      candidateTest.candidateEmail,
+      candidateTest.candidateName,
+      candidateTest.test?.title || 'Test Technique',
+      candidateTest.score,
+      candidateTest.totalQuestions,
+      percentage,
+      percentage >= 60
+    );
+
+    if (emailSent) {
+      console.log('✅ Results email sent successfully');
+      res.json({
+        success: true,
+        message: 'Email de résultats envoyé avec succès'
+      });
+    } else {
+      console.log('⚠️ Failed to send results email');
+      res.status(500).json({
+        success: false,
+        error: 'Erreur lors de l\'envoi de l\'email'
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ Error sending results email:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
 
 module.exports = {
   createCandidateTest,
   getCandidateTestByLink,
   submitCandidateTest,
   getCandidateTests,
-  evaluateCandidateTest
+  evaluateCandidateTest,
+  sendResultsEmailToCandidate
 };

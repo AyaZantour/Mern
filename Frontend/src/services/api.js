@@ -37,6 +37,8 @@ export const candidateTestAPI = {
   getAll: () => api.get('/candidate-tests'),
    evaluate: (id, data) => api.put(`/candidate-tests/${id}/evaluate`, data), // NEW
   getByTestId: (testId) => api.get(`/candidate-tests/test/${testId}`), // NEW
+  sendResults: (id) => api.post(`/candidate-tests/${id}/send-results`),  // ✅ Add this line
+
 };
 
 // Send Test API calls

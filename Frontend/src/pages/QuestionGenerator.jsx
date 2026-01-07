@@ -74,7 +74,8 @@ const QuestionGenerator = () => {
         console.log(`⚠️ Using ${questions.length} mock questions`);
       }
 
-      setGeneratedQuestions(prev => [...prev, ...questions]);
+      setGeneratedQuestions(prev => [...questions, ...prev]);
+
 
     } catch (error) {
       console.error('API Error:', error);
@@ -230,12 +231,12 @@ const handleAddToTest = async () => {
         ? `✅ ${questionIds.length} questions ajoutées au test! Total: ${updatedTest.questions?.length} questions` 
         : '✅ Test créé avec succès!');
     } else {
-      alert('❌ Erreur: ' + (response.data.error || 'Échec de création du test'));
+      alert(' Erreur: ' + (response.data.error || 'Échec de création du test'));
     }
 
   } catch (error) {
-    console.error('❌ Error creating/updating test:', error);
-    alert('❌ Erreur lors de la création du test: ' + (error.response?.data?.error || error.message));
+    console.error(' Error creating/updating test:', error);
+    alert(' Erreur lors de la création du test: ' + (error.response?.data?.error || error.message));
   } finally {
     setTestLoading(false);
   }

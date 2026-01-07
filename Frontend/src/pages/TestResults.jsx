@@ -1,8 +1,3 @@
-// ========================================
-// Frontend/src/pages/TestResults.jsx
-// Complete test results page for viewing candidate answers
-// ========================================
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { candidateTestAPI } from '../services/api';
@@ -13,6 +8,7 @@ const TestResults = () => {
   const [candidateTest, setCandidateTest] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   useEffect(() => {
     fetchTestResults();
@@ -23,7 +19,6 @@ const TestResults = () => {
       setLoading(true);
       console.log('📊 Fetching results for test:', testId);
       
-      // Get all candidate tests and find this one
       const response = await candidateTestAPI.getAll();
       
       if (response.data.success) {
@@ -41,6 +36,30 @@ const TestResults = () => {
       setError('Erreur lors du chargement des résultats');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ✅ NEW: Send results email
+  const handleSendEmail = async () => {
+    if (!window.confirm(`Envoyer les résultats à ${candidateTest.candidateEmail} ?`)) {
+      return;
+    }
+
+    setSendingEmail(true);
+    try {
+      console.log('📧 Sending results email...');
+      const response = await candidateTestAPI.sendResults(testId);
+      
+      if (response.data.success) {
+        alert(`✅ Email envoyé avec succès à ${candidateTest.candidateEmail}!`);
+      } else {
+        alert('❌ Erreur lors de l\'envoi de l\'email');
+      }
+    } catch (error) {
+      console.error('❌ Error sending email:', error);
+      alert('❌ Erreur lors de l\'envoi de l\'email: ' + (error.response?.data?.error || error.message));
+    } finally {
+      setSendingEmail(false);
     }
   };
 
@@ -191,14 +210,13 @@ const TestResults = () => {
                 const question = item.question;
                 if (!question) return null;
 
-                // Parse answer if it's a string
                 let userAnswer = item.answer;
                 try {
                   if (typeof userAnswer === 'string' && userAnswer.startsWith('[')) {
                     userAnswer = JSON.parse(userAnswer);
                   }
                 } catch (e) {
-                  // Keep as string if parse fails
+                  // Keep as string
                 }
 
                 return (
@@ -230,14 +248,13 @@ const TestResults = () => {
                         </div>
                       </div>
                       
-                      {/* Result Badge */}
                       {item.isCorrect === true && (
-                        <span className="px-3 py-1 bg-green-600 text-white text-sm font-medium rounded-full flex items-center gap-1">
+                        <span className="px-3 py-1 bg-green-600 text-white text-sm font-medium rounded-full">
                           ✓ Correct
                         </span>
                       )}
                       {item.isCorrect === false && (
-                        <span className="px-3 py-1 bg-red-600 text-white text-sm font-medium rounded-full flex items-center gap-1">
+                        <span className="px-3 py-1 bg-red-600 text-white text-sm font-medium rounded-full">
                           ✗ Incorrect
                         </span>
                       )}
@@ -248,7 +265,6 @@ const TestResults = () => {
                       )}
                     </div>
 
-                    {/* Question Text */}
                     <h3 className="text-lg font-medium text-gray-900 mb-4">
                       {question.text}
                     </h3>
@@ -313,7 +329,6 @@ const TestResults = () => {
                           )}
                         </div>
                         
-                        {/* Expected Answer */}
                         {question.correctOptions && question.correctOptions.length > 0 && (
                           <div className="mt-3">
                             <p className="text-sm font-medium text-gray-700 mb-2">Réponse attendue:</p>
@@ -327,7 +342,6 @@ const TestResults = () => {
                       </div>
                     )}
 
-                    {/* Question Details */}
                     <div className="flex items-center gap-4 text-xs text-gray-500 mt-4 pt-4 border-t border-gray-200">
                       <span>⏱️ {question.time} min</span>
                       <span>📚 {question.category}</span>
@@ -348,21 +362,32 @@ const TestResults = () => {
         <div className="mt-8 flex gap-4">
           <button
             onClick={() => navigate('/candidate-portal')}
-            className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-md"
+            className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors"
           >
             Retour au portail
           </button>
           <button
             onClick={() => navigate(`/test-evaluation/${candidateTest.test?._id}`)}
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
+            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
           >
-            Voir tous les candidats pour ce test
+            Voir tous les candidats
           </button>
+          {/* ✅ NEW: Email button instead of print */}
           <button
-            onClick={() => window.print()}
-            className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-md"
+            onClick={handleSendEmail}
+            disabled={sendingEmail}
+            className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            🖨️ Imprimer les résultats
+            {sendingEmail ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                Envoi en cours...
+              </>
+            ) : (
+              <>
+                📧 Envoyer les résultats par email
+              </>
+            )}
           </button>
         </div>
       </div>

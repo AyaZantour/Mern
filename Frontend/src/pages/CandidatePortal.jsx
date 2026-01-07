@@ -1,3 +1,8 @@
+// ========================================
+// COMPLETE FIX: CandidatePortal.jsx
+// Handles 'evaluated' status and shows results button
+// ========================================
+
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { sendTestAPI, testAPI, candidateTestAPI } from '../services/api';
@@ -18,7 +23,7 @@ const CandidatePortal = () => {
   const [loading, setLoading] = useState(false);
   const [generatedLink, setGeneratedLink] = useState('');
   const [candidateTests, setCandidateTests] = useState([]);
-  const [activeTab, setActiveTab] = useState('send'); // 'send' or 'history'
+  const [activeTab, setActiveTab] = useState('send');
 
   useEffect(() => {
     fetchTests();
@@ -40,7 +45,11 @@ const CandidatePortal = () => {
     try {
       const response = await candidateTestAPI.getAll();
       if (response.data.success) {
-        setCandidateTests(response.data.data);
+        // ✅ Sort by newest first
+        const sortedTests = response.data.data.sort((a, b) => 
+          new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        setCandidateTests(sortedTests);
       }
     } catch (error) {
       console.error('Error fetching candidate tests:', error);
@@ -61,7 +70,7 @@ const CandidatePortal = () => {
 
       if (response.data.success) {
         setGeneratedLink(response.data.data.testLink);
-        fetchCandidateTests(); // Refresh list
+        fetchCandidateTests();
         alert('Test créé avec succès! Copiez le lien et envoyez-le au candidat.');
       }
     } catch (error) {
@@ -77,14 +86,28 @@ const CandidatePortal = () => {
     alert('Lien copié dans le presse-papier!');
   };
 
+  // ✅ FIXED: Updated to handle all statuses including 'evaluated'
   const getStatusBadge = (status) => {
     const badges = {
       'sent': 'bg-blue-100 text-blue-800',
       'in-progress': 'bg-yellow-100 text-yellow-800',
       'completed': 'bg-green-100 text-green-800',
+      'evaluated': 'bg-purple-100 text-purple-800', // ✅ Added evaluated
       'expired': 'bg-red-100 text-red-800'
     };
     return badges[status] || 'bg-gray-100 text-gray-800';
+  };
+
+  // ✅ FIXED: Updated to show proper labels
+  const getStatusLabel = (status) => {
+    const labels = {
+      'sent': 'Envoyé',
+      'in-progress': 'En cours',
+      'completed': 'Complété',
+      'evaluated': 'Évalué', // ✅ Added evaluated
+      'expired': 'Expiré'
+    };
+    return labels[status] || status;
   };
 
   return (
@@ -166,7 +189,7 @@ const CandidatePortal = () => {
                   <input
                     type="range"
                     min="1"
-                    max="168" // 7 jours
+                    max="168"
                     value={expiresInHours}
                     onChange={(e) => setExpiresInHours(parseInt(e.target.value))}
                     className="w-full"
@@ -286,14 +309,12 @@ const CandidatePortal = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusBadge(ct.status)}`}>
-                            {ct.status === 'sent' && 'Envoyé'}
-                            {ct.status === 'in-progress' && 'En cours'}
-                            {ct.status === 'completed' && 'Complété'}
-                            {ct.status === 'expired' && 'Expiré'}
+                            {getStatusLabel(ct.status)}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {ct.status === 'completed' ? (
+                          {/* ✅ FIXED: Show score for both completed AND evaluated */}
+                          {(ct.status === 'completed' || ct.status === 'evaluated') ? (
                             <span className="font-medium text-gray-900">
                               {ct.score}/{ct.totalQuestions} ({Math.round((ct.score/ct.totalQuestions)*100)}%)
                             </span>
@@ -305,7 +326,8 @@ const CandidatePortal = () => {
                           {new Date(ct.createdAt).toLocaleDateString('fr-FR')}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          {ct.status === 'completed' && (
+                          {/* ✅ FIXED: Show button for both completed AND evaluated */}
+                          {(ct.status === 'completed' || ct.status === 'evaluated') && (
                             <button
                               onClick={() => navigate(`/test-results/${ct._id}`)}
                               className="text-blue-600 hover:text-blue-900"
