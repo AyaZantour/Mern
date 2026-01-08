@@ -4,7 +4,7 @@ An AI-powered platform for generating technical interview questions and creating
 
 ## 🚀 Features
 
-- **AI-Powered Question Generation**: Uses Gemini AI to create technical questions
+- **AI-Powered Question Generation**: Uses Groq AI to create technical questions
 - **Multiple Question Types**: QCM, coding questions, open-ended questions
 - **Difficulty Levels**: Easy, medium, and hard questions
 - **Test Creation**: Compile selected questions into tests
@@ -15,14 +15,14 @@ An AI-powered platform for generating technical interview questions and creating
 - **Frontend**: React, Tailwind CSS, Axios
 - **Backend**: Node.js, Express.js
 - **Database**: MongoDB, Mongoose
-- **AI**: Google Gemini API
+- **AI**: Google Groq API
 
 ## 📦 Installation
 
 ### Prerequisites
 - Node.js (v14 or higher)
 - MongoDB
-- Google Gemini API key
+- Google Groq API key
 
 ### Backend Setup
 ```bash
